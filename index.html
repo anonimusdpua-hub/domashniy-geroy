@@ -117,7 +117,7 @@
     button {
       border: none;
       border-radius: 12px;
-      padding: 10px 14px;
+      padding: 11px 14px;
       font-size: 14px;
       font-weight: bold;
       cursor: pointer;
@@ -135,7 +135,7 @@
     .delete-btn {
       background: #fee2e2;
       color: #991b1b;
-      padding: 8px 10px;
+      margin-left: 5px;
     }
 
     input {
@@ -151,14 +151,13 @@
       width: 100%;
       background: #16a34a;
       color: white;
-      padding: 13px;
     }
 
     .settings-btn {
       width: 100%;
       background: #f59e0b;
       color: white;
-      padding: 13px;
+      margin-top: 5px;
     }
 
     .reset-btn {
@@ -166,7 +165,20 @@
       background: #ef4444;
       color: white;
       margin-top: 10px;
-      padding: 14px;
+    }
+
+    .parent-btn {
+      width: 100%;
+      background: #1f2937;
+      color: white;
+      margin-top: 15px;
+    }
+
+    .exit-btn {
+      width: 100%;
+      background: #6b7280;
+      color: white;
+      margin-top: 10px;
     }
 
     .small-text {
@@ -180,6 +192,17 @@
       color: #777;
       padding: 20px;
     }
+
+    .hidden {
+      display: none;
+    }
+
+    .mode {
+      text-align: center;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #555;
+    }
   </style>
 </head>
 
@@ -191,6 +214,10 @@
 </header>
 
 <div class="container">
+
+  <div id="modeText" class="mode">
+    🦸 Режим ребёнка
+  </div>
 
   <div class="card points-card">
     <div>Твои баллы</div>
@@ -204,52 +231,108 @@
     </div>
   </div>
 
-  <div class="card">
-    <h2>🎯 Правило прогулки</h2>
-
-    <div class="small-text">
-      Сколько баллов нужно набрать?
-    </div>
-
-    <input
-      type="number"
-      id="requiredPoints"
-      min="1"
-      placeholder="Например: 20"
-    >
-
-    <button class="settings-btn" onclick="saveRequiredPoints()">
-      💾 Сохранить правило
-    </button>
-  </div>
-
   <h2>📋 Задания</h2>
 
   <div id="tasks"></div>
 
-  <div class="card">
-    <h2>➕ Добавить новое задание</h2>
 
-    <input
-      type="text"
-      id="newTaskName"
-      placeholder="Например: 🛏️ Заправить кровать"
+  <!-- РОДИТЕЛЬСКАЯ ПАНЕЛЬ -->
+
+  <div id="parentPanel" class="hidden">
+
+    <div class="card">
+      <h2>🎯 Правило прогулки</h2>
+
+      <div class="small-text">
+        Сколько баллов нужно набрать?
+      </div>
+
+      <input
+        type="number"
+        id="requiredPoints"
+        min="1"
+        placeholder="Например: 20"
+      >
+
+      <button
+        class="settings-btn"
+        onclick="saveRequiredPoints()"
+      >
+        💾 Сохранить правило
+      </button>
+    </div>
+
+
+    <div class="card">
+      <h2>➕ Добавить новое задание</h2>
+
+      <input
+        type="text"
+        id="newTaskName"
+        placeholder="Например: 🛏️ Заправить кровать"
+      >
+
+      <input
+        type="number"
+        id="newTaskPoints"
+        placeholder="Сколько баллов?"
+        min="1"
+      >
+
+      <button
+        class="add-btn"
+        onclick="addTask()"
+      >
+        ➕ Добавить задание
+      </button>
+    </div>
+
+
+    <div class="card">
+      <h2>🔐 Изменить PIN-код</h2>
+
+      <input
+        type="password"
+        id="newPin"
+        maxlength="10"
+        placeholder="Новый PIN"
+      >
+
+      <button
+        class="settings-btn"
+        onclick="changePin()"
+      >
+        🔐 Сохранить PIN
+      </button>
+    </div>
+
+
+    <button
+      class="reset-btn"
+      onclick="resetTasks()"
     >
-
-    <input
-      type="number"
-      id="newTaskPoints"
-      placeholder="Сколько баллов?"
-      min="1"
-    >
-
-    <button class="add-btn" onclick="addTask()">
-      ➕ Добавить задание
+      🔄 Сбросить все задания
     </button>
+
+
+    <button
+      class="exit-btn"
+      onclick="exitParentMode()"
+    >
+      🚪 Выйти из режима родителя
+    </button>
+
   </div>
 
-  <button class="reset-btn" onclick="resetTasks()">
-    🔄 Начать задания заново
+
+  <!-- КНОПКА ВХОДА -->
+
+  <button
+    id="parentLoginBtn"
+    class="parent-btn"
+    onclick="enterParentMode()"
+  >
+    🔐 Войти как родитель
   </button>
 
 </div>
@@ -265,20 +348,23 @@ const defaultTasks = [
   { name: "🗑️ Вынести мусор", points: 5 }
 ];
 
+let tasks =
+  JSON.parse(localStorage.getItem("tasks")) ||
+  defaultTasks;
 
-let tasks = JSON.parse(
-  localStorage.getItem("tasks")
-) || defaultTasks;
+let completedTasks =
+  JSON.parse(localStorage.getItem("completedTasks")) ||
+  [];
 
+let requiredPoints =
+  Number(localStorage.getItem("requiredPoints")) ||
+  20;
 
-let completedTasks = JSON.parse(
-  localStorage.getItem("completedTasks")
-) || [];
+let parentPin =
+  localStorage.getItem("parentPin") ||
+  "1234";
 
-
-let requiredPoints = Number(
-  localStorage.getItem("requiredPoints")
-) || 20;
+let parentMode = false;
 
 
 document.getElementById("requiredPoints").value =
@@ -316,6 +402,7 @@ function renderTasks() {
     updatePoints();
 
     return;
+
   }
 
 
@@ -333,6 +420,35 @@ function renderTasks() {
       "task" + (completed ? " completed" : "");
 
 
+    let buttons = `
+
+      <button
+        class="complete-btn"
+        onclick="completeTask(${index})"
+        ${completed ? "disabled" : ""}
+      >
+        ${completed ? "✅ Выполнено" : "Выполнить"}
+      </button>
+
+    `;
+
+
+    if (parentMode) {
+
+      buttons += `
+
+        <button
+          class="delete-btn"
+          onclick="deleteTask(${index})"
+        >
+          🗑️
+        </button>
+
+      `;
+
+    }
+
+
     taskElement.innerHTML = `
 
       <div class="task-info">
@@ -347,25 +463,8 @@ function renderTasks() {
 
       </div>
 
-
       <div>
-
-        <button
-          class="complete-btn"
-          onclick="completeTask(${index})"
-          ${completed ? "disabled" : ""}
-        >
-          ${completed ? "✅" : "Выполнить"}
-        </button>
-
-
-        <button
-          class="delete-btn"
-          onclick="deleteTask(${index})"
-        >
-          🗑️
-        </button>
-
+        ${buttons}
       </div>
 
     `;
@@ -396,15 +495,85 @@ function completeTask(index) {
 }
 
 
+function enterParentMode() {
+
+  const pin =
+    prompt("Введите PIN-код родителя");
+
+
+  if (pin === parentPin) {
+
+    parentMode = true;
+
+
+    document
+      .getElementById("parentPanel")
+      .classList.remove("hidden");
+
+
+    document
+      .getElementById("parentLoginBtn")
+      .classList.add("hidden");
+
+
+    document
+      .getElementById("modeText")
+      .textContent =
+      "👨‍👩‍👧 Режим родителя";
+
+
+    renderTasks();
+
+
+  } else {
+
+    alert("❌ Неверный PIN-код");
+
+  }
+
+}
+
+
+function exitParentMode() {
+
+  parentMode = false;
+
+
+  document
+    .getElementById("parentPanel")
+    .classList.add("hidden");
+
+
+  document
+    .getElementById("parentLoginBtn")
+    .classList.remove("hidden");
+
+
+  document
+    .getElementById("modeText")
+    .textContent =
+    "🦸 Режим ребёнка";
+
+
+  renderTasks();
+
+}
+
+
 function addTask() {
 
   const name =
-    document.getElementById("newTaskName").value.trim();
+    document
+      .getElementById("newTaskName")
+      .value
+      .trim();
 
 
   const points =
     Number(
-      document.getElementById("newTaskPoints").value
+      document
+        .getElementById("newTaskPoints")
+        .value
     );
 
 
@@ -435,9 +604,14 @@ function addTask() {
   saveData();
 
 
-  document.getElementById("newTaskName").value = "";
+  document
+    .getElementById("newTaskName")
+    .value = "";
 
-  document.getElementById("newTaskPoints").value = "";
+
+  document
+    .getElementById("newTaskPoints")
+    .value = "";
 
 
   renderTasks();
@@ -447,9 +621,10 @@ function addTask() {
 
 function deleteTask(index) {
 
-  if (
-    confirm("Удалить это задание?")
-  ) {
+  if (!parentMode) return;
+
+
+  if (confirm("Удалить это задание?")) {
 
     tasks.splice(index, 1);
 
@@ -471,7 +646,9 @@ function saveRequiredPoints() {
 
   const value =
     Number(
-      document.getElementById("requiredPoints").value
+      document
+        .getElementById("requiredPoints")
+        .value
     );
 
 
@@ -496,9 +673,44 @@ function saveRequiredPoints() {
   updatePoints();
 
 
-  alert(
-    "Правило сохранено! 🎯"
+  alert("Правило сохранено! 🎯");
+
+}
+
+
+function changePin() {
+
+  const newPin =
+    document
+      .getElementById("newPin")
+      .value
+      .trim();
+
+
+  if (newPin.length < 4) {
+
+    alert("PIN должен содержать минимум 4 символа");
+
+    return;
+
+  }
+
+
+  parentPin = newPin;
+
+
+  localStorage.setItem(
+    "parentPin",
+    parentPin
   );
+
+
+  document
+    .getElementById("newPin")
+    .value = "";
+
+
+  alert("🔐 PIN-код изменён!");
 
 }
 
@@ -519,8 +731,9 @@ function updatePoints() {
   });
 
 
-  document.getElementById("points").textContent =
-    total;
+  document
+    .getElementById("points")
+    .textContent = total;
 
 
   const status =
@@ -556,9 +769,10 @@ function updatePoints() {
 
 function resetTasks() {
 
-  if (
-    confirm("Начать задания заново?")
-  ) {
+  if (!parentMode) return;
+
+
+  if (confirm("Сбросить все задания?")) {
 
     completedTasks = [];
 
