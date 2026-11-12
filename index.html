@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Домашний герой ⭐</title>
+  <title>Домашний герой 🏆</title>
 
   <style>
     * {
@@ -286,6 +286,91 @@
       color: #4f46e5;
       font-size: 24px;
     }
+
+    /* УРОВЕНЬ */
+
+    .level-card {
+      text-align: center;
+    }
+
+    .level-icon {
+      font-size: 55px;
+      margin-bottom: 5px;
+    }
+
+    .level-name {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .level-points {
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 18px;
+      background: #e5e7eb;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #4f46e5;
+      width: 0%;
+      transition: width 0.4s;
+    }
+
+    .next-level {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* ДОСТИЖЕНИЯ */
+
+    .achievement {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      background: #f3f4f6;
+      opacity: 0.5;
+    }
+
+    .achievement.unlocked {
+      background: #fff7ed;
+      opacity: 1;
+    }
+
+    .achievement-icon {
+      font-size: 30px;
+    }
+
+    .achievement-info {
+      flex: 1;
+    }
+
+    .achievement-title {
+      font-weight: bold;
+    }
+
+    .achievement-description {
+      font-size: 13px;
+      color: #666;
+      margin-top: 3px;
+    }
+
+    .achievement-status {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 
@@ -305,6 +390,35 @@
   <div id="dayInfo" class="day-info"></div>
 
 
+  <!-- УРОВЕНЬ -->
+
+  <div class="card level-card">
+
+    <div id="levelIcon" class="level-icon">🥉</div>
+
+    <div id="levelName" class="level-name">
+      Новичок
+    </div>
+
+    <div class="level-points">
+      Всего заработано:
+      <strong id="totalPoints">0</strong> ⭐
+    </div>
+
+    <div class="progress-container">
+      <div
+        id="progressBar"
+        class="progress-bar">
+      </div>
+    </div>
+
+    <div id="nextLevelText" class="next-level"></div>
+
+  </div>
+
+
+  <!-- БАЛЛЫ СЕГОДНЯ -->
+
   <div class="card points-card">
 
     <div>Подтверждённые баллы сегодня</div>
@@ -320,9 +434,22 @@
   </div>
 
 
+  <!-- ЗАДАНИЯ -->
+
   <h2>📋 Задания на сегодня</h2>
 
   <div id="tasks"></div>
+
+
+  <!-- ДОСТИЖЕНИЯ -->
+
+  <div class="card">
+
+    <h2>🏆 Мои достижения</h2>
+
+    <div id="achievements"></div>
+
+  </div>
 
 
   <!-- РОДИТЕЛЬСКАЯ ПАНЕЛЬ -->
@@ -344,14 +471,19 @@
       <h2>📊 Статистика за 7 дней</h2>
 
       <div class="big-stat">
-        Всего заработано: <strong id="weekPoints">0</strong> ⭐
+        Всего заработано:
+        <strong id="weekPoints">0</strong> ⭐
       </div>
 
       <div class="big-stat">
-        Выполнено заданий: <strong id="weekTasks">0</strong>
+        Выполнено заданий:
+        <strong id="weekTasks">0</strong>
       </div>
 
-      <div id="weeklyStats" class="stats-grid"></div>
+      <div
+        id="weeklyStats"
+        class="stats-grid">
+      </div>
 
     </div>
 
@@ -373,8 +505,7 @@
 
       <button
         class="settings-btn"
-        onclick="saveRequiredPoints()"
-      >
+        onclick="saveRequiredPoints()">
         💾 Сохранить правило
       </button>
 
@@ -400,8 +531,7 @@
 
       <button
         class="add-btn"
-        onclick="addTask()"
-      >
+        onclick="addTask()">
         ➕ Добавить задание
       </button>
 
@@ -421,8 +551,7 @@
 
       <button
         class="settings-btn"
-        onclick="changePin()"
-      >
+        onclick="changePin()">
         🔐 Сохранить PIN
       </button>
 
@@ -437,8 +566,7 @@
 
       <button
         class="reset-btn"
-        onclick="clearHistory()"
-      >
+        onclick="clearHistory()">
         🗑️ Очистить историю
       </button>
 
@@ -447,27 +575,26 @@
 
     <button
       class="reset-btn"
-      onclick="resetTodayTasks()"
-    >
+      onclick="resetTodayTasks()">
       🔄 Сбросить задания на сегодня
     </button>
 
 
     <button
       class="exit-btn"
-      onclick="exitParentMode()"
-    >
+      onclick="exitParentMode()">
       🚪 Выйти из режима родителя
     </button>
 
   </div>
 
 
+  <!-- ВХОД РОДИТЕЛЯ -->
+
   <button
     id="parentLoginBtn"
     class="parent-btn"
-    onclick="enterParentMode()"
-  >
+    onclick="enterParentMode()">
     🔐 Войти как родитель
   </button>
 
@@ -477,7 +604,7 @@
 <script>
 
 /* =========================
-   НАСТРОЙКИ И ДАННЫЕ
+   ЗАДАНИЯ
 ========================= */
 
 const defaultTasks = [
@@ -494,16 +621,16 @@ let tasks =
   defaultTasks;
 
 
-/* Добавляем ID старым заданиям */
-
 tasks = tasks.map((task, index) => {
 
   if (!task.id) {
+
     task.id =
       "task_" +
       Date.now() +
       "_" +
       index;
+
   }
 
   return task;
@@ -514,33 +641,6 @@ tasks = tasks.map((task, index) => {
 let taskStates =
   JSON.parse(localStorage.getItem("taskStates")) ||
   {};
-
-
-/* Перенос данных из старой версии */
-
-let oldCompleted =
-  JSON.parse(
-    localStorage.getItem("completedTasks")
-  ) || [];
-
-
-if (
-  Object.keys(taskStates).length === 0 &&
-  oldCompleted.length > 0
-) {
-
-  oldCompleted.forEach(index => {
-
-    if (tasks[index]) {
-
-      taskStates[tasks[index].id] =
-        "approved";
-
-    }
-
-  });
-
-}
 
 
 let history =
@@ -560,6 +660,69 @@ let parentPin =
 
 
 let parentMode = false;
+
+
+/* =========================
+   ДОСТИЖЕНИЯ
+========================= */
+
+const achievements = [
+
+  {
+    id: "first_task",
+    icon: "🎉",
+    title: "Первый шаг",
+    description:
+      "Выполнить первое подтверждённое задание"
+  },
+
+  {
+    id: "five_tasks",
+    icon: "💪",
+    title: "Настоящий помощник",
+    description:
+      "Выполнить 5 подтверждённых заданий"
+  },
+
+  {
+    id: "ten_tasks",
+    icon: "🔥",
+    title: "Не остановить!",
+    description:
+      "Выполнить 10 подтверждённых заданий"
+  },
+
+  {
+    id: "100_points",
+    icon: "⭐",
+    title: "100 баллов",
+    description:
+      "Заработать 100 баллов за всё время"
+  },
+
+  {
+    id: "300_points",
+    icon: "🥇",
+    title: "Герой дома",
+    description:
+      "Заработать 300 баллов за всё время"
+  },
+
+  {
+    id: "500_points",
+    icon: "🏆",
+    title: "Супергерой",
+    description:
+      "Заработать 500 баллов за всё время"
+  }
+
+];
+
+
+let unlockedAchievements =
+  JSON.parse(
+    localStorage.getItem("unlockedAchievements")
+  ) || [];
 
 
 /* =========================
@@ -634,35 +797,319 @@ function saveData() {
     JSON.stringify(tasks)
   );
 
-
   localStorage.setItem(
     "taskStates",
     JSON.stringify(taskStates)
   );
-
 
   localStorage.setItem(
     "taskHistory",
     JSON.stringify(history)
   );
 
-
   localStorage.setItem(
     "requiredPoints",
     requiredPoints
   );
-
 
   localStorage.setItem(
     "parentPin",
     parentPin
   );
 
+  localStorage.setItem(
+    "unlockedAchievements",
+    JSON.stringify(unlockedAchievements)
+  );
+
 }
 
 
 /* =========================
-   ЗАДАНИЯ
+   ОБЩИЕ БАЛЛЫ
+========================= */
+
+function getTotalPoints() {
+
+  return history.reduce(
+    (sum, item) =>
+      sum + Number(item.points || 0),
+    0
+  );
+
+}
+
+
+function getTotalTasks() {
+
+  return history.length;
+
+}
+
+
+/* =========================
+   УРОВНИ
+========================= */
+
+function updateLevel() {
+
+  const totalPoints =
+    getTotalPoints();
+
+
+  let levelName = "";
+  let levelIcon = "";
+  let nextLevel = 0;
+  let currentStart = 0;
+
+
+  if (totalPoints < 50) {
+
+    levelName = "Новичок";
+    levelIcon = "🥉";
+    nextLevel = 50;
+    currentStart = 0;
+
+  } else if (totalPoints < 150) {
+
+    levelName = "Помощник";
+    levelIcon = "🥈";
+    nextLevel = 150;
+    currentStart = 50;
+
+  } else if (totalPoints < 300) {
+
+    levelName = "Герой дома";
+    levelIcon = "🥇";
+    nextLevel = 300;
+    currentStart = 150;
+
+  } else if (totalPoints < 500) {
+
+    levelName = "Супергерой";
+    levelIcon = "🦸";
+    nextLevel = 500;
+    currentStart = 300;
+
+  } else {
+
+    levelName = "Легенда дома";
+    levelIcon = "🏆";
+
+  }
+
+
+  document
+    .getElementById("levelName")
+    .textContent =
+    levelName;
+
+
+  document
+    .getElementById("levelIcon")
+    .textContent =
+    levelIcon;
+
+
+  document
+    .getElementById("totalPoints")
+    .textContent =
+    totalPoints;
+
+
+  const progressBar =
+    document.getElementById("progressBar");
+
+
+  const nextLevelText =
+    document.getElementById("nextLevelText");
+
+
+  if (nextLevel > 0) {
+
+    const progress =
+      (
+        (totalPoints - currentStart) /
+        (nextLevel - currentStart)
+      ) * 100;
+
+
+    progressBar.style.width =
+      Math.min(
+        100,
+        Math.max(0, progress)
+      ) + "%";
+
+
+    const remaining =
+      nextLevel - totalPoints;
+
+
+    nextLevelText.textContent =
+      "До следующего уровня осталось: " +
+      remaining +
+      " ⭐";
+
+  } else {
+
+    progressBar.style.width = "100%";
+
+    nextLevelText.textContent =
+      "🎉 Максимальный уровень достигнут!";
+
+  }
+
+}
+
+
+/* =========================
+   ДОСТИЖЕНИЯ
+========================= */
+
+function checkAchievements() {
+
+  const totalTasks =
+    getTotalTasks();
+
+
+  const totalPoints =
+    getTotalPoints();
+
+
+  const shouldUnlock = [];
+
+
+  if (totalTasks >= 1) {
+    shouldUnlock.push("first_task");
+  }
+
+  if (totalTasks >= 5) {
+    shouldUnlock.push("five_tasks");
+  }
+
+  if (totalTasks >= 10) {
+    shouldUnlock.push("ten_tasks");
+  }
+
+  if (totalPoints >= 100) {
+    shouldUnlock.push("100_points");
+  }
+
+  if (totalPoints >= 300) {
+    shouldUnlock.push("300_points");
+  }
+
+  if (totalPoints >= 500) {
+    shouldUnlock.push("500_points");
+  }
+
+
+  let newAchievement = null;
+
+
+  shouldUnlock.forEach(id => {
+
+    if (!unlockedAchievements.includes(id)) {
+
+      unlockedAchievements.push(id);
+
+      newAchievement =
+        achievements.find(
+          item => item.id === id
+        );
+
+    }
+
+  });
+
+
+  saveData();
+
+
+  if (newAchievement) {
+
+    setTimeout(() => {
+
+      alert(
+        "🏆 Новое достижение!\n\n" +
+        newAchievement.icon +
+        " " +
+        newAchievement.title
+      );
+
+    }, 300);
+
+  }
+
+}
+
+
+function renderAchievements() {
+
+  const container =
+    document.getElementById("achievements");
+
+
+  container.innerHTML = "";
+
+
+  achievements.forEach(achievement => {
+
+    const unlocked =
+      unlockedAchievements.includes(
+        achievement.id
+      );
+
+
+    const element =
+      document.createElement("div");
+
+
+    element.className =
+      "achievement" +
+      (unlocked ? " unlocked" : "");
+
+
+    element.innerHTML = `
+
+      <div class="achievement-icon">
+        ${achievement.icon}
+      </div>
+
+      <div class="achievement-info">
+
+        <div class="achievement-title">
+          ${achievement.title}
+        </div>
+
+        <div class="achievement-description">
+          ${achievement.description}
+        </div>
+
+      </div>
+
+      <div class="achievement-status">
+
+        ${
+          unlocked
+            ? "✅ Получено"
+            : "🔒"
+        }
+
+      </div>
+
+    `;
+
+
+    container.appendChild(element);
+
+  });
+
+}
+
+
+/* =========================
+   ОТОБРАЖЕНИЕ ЗАДАНИЙ
 ========================= */
 
 function renderTasks() {
@@ -690,14 +1137,16 @@ function renderTasks() {
   tasks.forEach(task => {
 
     const state =
-      taskStates[task.id] || "available";
+      taskStates[task.id] ||
+      "available";
 
 
     const element =
       document.createElement("div");
 
 
-    element.className = "task";
+    element.className =
+      "task";
 
 
     if (state === "approved") {
@@ -722,8 +1171,6 @@ function renderTasks() {
     let buttons = "";
 
 
-    /* ДОСТУПНО */
-
     if (state === "available") {
 
       statusText =
@@ -733,16 +1180,13 @@ function renderTasks() {
       buttons = `
         <button
           class="complete-btn"
-          onclick="submitTask('${task.id}')"
-        >
+          onclick="submitTask('${task.id}')">
           📤 Выполнил
         </button>
       `;
 
     }
 
-
-    /* НА ПРОВЕРКЕ */
 
     if (state === "pending") {
 
@@ -753,16 +1197,13 @@ function renderTasks() {
       buttons = `
         <button
           class="pending-btn"
-          disabled
-        >
+          disabled>
           ⏳ Проверяется
         </button>
       `;
 
     }
 
-
-    /* ПОДТВЕРЖДЕНО */
 
     if (state === "approved") {
 
@@ -773,8 +1214,7 @@ function renderTasks() {
       buttons = `
         <button
           class="complete-btn"
-          disabled
-        >
+          disabled>
           ✅ Выполнено
         </button>
       `;
@@ -782,15 +1222,12 @@ function renderTasks() {
     }
 
 
-    /* УДАЛЕНИЕ ТОЛЬКО РОДИТЕЛЕМ */
-
     if (parentMode) {
 
       buttons += `
         <button
           class="delete-btn"
-          onclick="deleteTask('${task.id}')"
-        >
+          onclick="deleteTask('${task.id}')">
           🗑️
         </button>
       `;
@@ -813,7 +1250,6 @@ function renderTasks() {
         ${statusText}
 
       </div>
-
 
       <div>
         ${buttons}
@@ -838,9 +1274,13 @@ function renderTasks() {
 
 function submitTask(taskId) {
 
+  const state =
+    taskStates[taskId];
+
+
   if (
-    taskStates[taskId] === "available" ||
-    taskStates[taskId] === undefined
+    state === "available" ||
+    state === undefined
   ) {
 
     taskStates[taskId] =
@@ -849,12 +1289,13 @@ function submitTask(taskId) {
 
     saveData();
 
-
     renderTasks();
 
 
     if (parentMode) {
+
       renderPendingTasks();
+
     }
 
   }
@@ -863,7 +1304,7 @@ function submitTask(taskId) {
 
 
 /* =========================
-   ПОДТВЕРЖДЕНИЕ РОДИТЕЛЕМ
+   ПРОВЕРКА РОДИТЕЛЕМ
 ========================= */
 
 function renderPendingTasks() {
@@ -878,7 +1319,8 @@ function renderPendingTasks() {
   const pending =
     tasks.filter(
       task =>
-        taskStates[task.id] === "pending"
+        taskStates[task.id] ===
+        "pending"
     );
 
 
@@ -905,7 +1347,9 @@ function renderPendingTasks() {
 
     element.innerHTML = `
 
-      <strong>${task.name}</strong>
+      <strong>
+        ${task.name}
+      </strong>
 
       <div class="history-date">
         ⭐ ${task.points} баллов
@@ -913,15 +1357,13 @@ function renderPendingTasks() {
 
       <button
         class="approve-btn"
-        onclick="approveTask('${task.id}')"
-      >
+        onclick="approveTask('${task.id}')">
         ✅ Подтвердить
       </button>
 
       <button
         class="reject-btn"
-        onclick="rejectTask('${task.id}')"
-      >
+        onclick="rejectTask('${task.id}')">
         ❌ Отклонить
       </button>
 
@@ -977,6 +1419,8 @@ function approveTask(taskId) {
   });
 
 
+  checkAchievements();
+
   saveData();
 
 
@@ -987,6 +1431,10 @@ function approveTask(taskId) {
   renderHistory();
 
   renderWeeklyStats();
+
+  updateLevel();
+
+  renderAchievements();
 
 }
 
@@ -1011,7 +1459,7 @@ function rejectTask(taskId) {
 
 
 /* =========================
-   БАЛЛЫ
+   БАЛЛЫ СЕГОДНЯ
 ========================= */
 
 function updatePoints() {
@@ -1022,7 +1470,8 @@ function updatePoints() {
   tasks.forEach(task => {
 
     if (
-      taskStates[task.id] === "approved"
+      taskStates[task.id] ===
+      "approved"
     ) {
 
       total += task.points;
@@ -1197,7 +1646,7 @@ function addTask() {
   }
 
 
-  const newTask = {
+  tasks.push({
 
     id:
       "task_" +
@@ -1207,10 +1656,7 @@ function addTask() {
 
     points: points
 
-  };
-
-
-  tasks.push(newTask);
+  });
 
 
   saveData();
@@ -1232,7 +1678,7 @@ function addTask() {
 
 
 /* =========================
-   УДАЛЕНИЕ ЗАДАНИЯ
+   УДАЛЕНИЕ
 ========================= */
 
 function deleteTask(taskId) {
@@ -1375,36 +1821,38 @@ function renderHistory() {
   }
 
 
-  history.slice(0, 50).forEach(item => {
+  history
+    .slice(0, 50)
+    .forEach(item => {
 
-    const element =
-      document.createElement("div");
-
-
-    element.className =
-      "history-item";
+      const element =
+        document.createElement("div");
 
 
-    element.innerHTML = `
-
-      <strong>
-        ${item.task}
-      </strong>
-
-      <br>
-
-      ⭐ +${item.points} баллов
-
-      <div class="history-date">
-        📅 ${item.date} в ${item.time}
-      </div>
-
-    `;
+      element.className =
+        "history-item";
 
 
-    container.appendChild(element);
+      element.innerHTML = `
 
-  });
+        <strong>
+          ${item.task}
+        </strong>
+
+        <br>
+
+        ⭐ +${item.points} баллов
+
+        <div class="history-date">
+          📅 ${item.date} в ${item.time}
+        </div>
+
+      `;
+
+
+      container.appendChild(element);
+
+    });
 
 }
 
@@ -1416,11 +1864,13 @@ function clearHistory() {
 
   if (
     confirm(
-      "Очистить всю историю?"
+      "Очистить всю историю? Это также сбросит уровни и достижения."
     )
   ) {
 
     history = [];
+
+    unlockedAchievements = [];
 
 
     saveData();
@@ -1429,6 +1879,10 @@ function clearHistory() {
     renderHistory();
 
     renderWeeklyStats();
+
+    updateLevel();
+
+    renderAchievements();
 
   }
 
@@ -1505,7 +1959,7 @@ function renderWeeklyStats() {
     const dayPoints =
       dayItems.reduce(
         (sum, item) =>
-          sum + item.points,
+          sum + Number(item.points || 0),
         0
       );
 
@@ -1605,7 +2059,13 @@ checkNewDay();
 
 updateDayInfo();
 
+checkAchievements();
+
 renderTasks();
+
+updateLevel();
+
+renderAchievements();
 
 </script>
 
