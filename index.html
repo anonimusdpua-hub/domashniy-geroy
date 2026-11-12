@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Домашний герой ⭐</title>
 
   <style>
@@ -106,21 +107,32 @@
       color: #666;
     }
 
-    .completed {
-      opacity: 0.55;
+    .task-status {
+      margin-top: 7px;
+      font-size: 13px;
+      font-weight: bold;
     }
 
-    .completed .task-name {
+    .approved-task {
+      opacity: 0.65;
+    }
+
+    .approved-task .task-name {
       text-decoration: line-through;
+    }
+
+    .pending-task {
+      border: 2px solid #f59e0b;
     }
 
     button {
       border: none;
       border-radius: 12px;
-      padding: 11px 14px;
+      padding: 10px 13px;
       font-size: 14px;
       font-weight: bold;
       cursor: pointer;
+      margin-top: 3px;
     }
 
     .complete-btn {
@@ -128,8 +140,20 @@
       color: white;
     }
 
-    .complete-btn:disabled {
-      background: #aaa;
+    .pending-btn {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .approve-btn {
+      background: #16a34a;
+      color: white;
+    }
+
+    .reject-btn {
+      background: #ef4444;
+      color: white;
+      margin-left: 5px;
     }
 
     .delete-btn {
@@ -204,6 +228,13 @@
       color: #555;
     }
 
+    .day-info {
+      text-align: center;
+      color: #666;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
     .history-item {
       padding: 12px 0;
       border-bottom: 1px solid #eee;
@@ -219,11 +250,41 @@
       margin-top: 4px;
     }
 
-    .day-info {
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-top: 15px;
+    }
+
+    .stat-day {
+      background: #f3f4f6;
+      border-radius: 10px;
+      padding: 8px 3px;
       text-align: center;
-      color: #666;
-      margin-bottom: 15px;
-      font-size: 14px;
+      font-size: 12px;
+    }
+
+    .stat-points {
+      font-weight: bold;
+      margin-top: 5px;
+      color: #4f46e5;
+    }
+
+    .stat-date {
+      font-size: 11px;
+      color: #777;
+    }
+
+    .big-stat {
+      text-align: center;
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    .big-stat strong {
+      color: #4f46e5;
+      font-size: 24px;
     }
   </style>
 </head>
@@ -243,8 +304,10 @@
 
   <div id="dayInfo" class="day-info"></div>
 
+
   <div class="card points-card">
-    <div>Твои баллы сегодня</div>
+
+    <div>Подтверждённые баллы сегодня</div>
 
     <div class="points">
       <span id="points">0</span> ⭐
@@ -253,7 +316,9 @@
     <div id="status" class="status not-allowed">
       ⛔ Пока нельзя идти гулять
     </div>
+
   </div>
+
 
   <h2>📋 Задания на сегодня</h2>
 
@@ -261,13 +326,42 @@
 
 
   <!-- РОДИТЕЛЬСКАЯ ПАНЕЛЬ -->
+
   <div id="parentPanel" class="hidden">
 
+
     <div class="card">
+
+      <h2>⏳ Задания на проверке</h2>
+
+      <div id="pendingTasks"></div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>📊 Статистика за 7 дней</h2>
+
+      <div class="big-stat">
+        Всего заработано: <strong id="weekPoints">0</strong> ⭐
+      </div>
+
+      <div class="big-stat">
+        Выполнено заданий: <strong id="weekTasks">0</strong>
+      </div>
+
+      <div id="weeklyStats" class="stats-grid"></div>
+
+    </div>
+
+
+    <div class="card">
+
       <h2>🎯 Правило прогулки</h2>
 
       <div class="small-text">
-        Сколько баллов нужно набрать?
+        Сколько подтверждённых баллов нужно набрать?
       </div>
 
       <input
@@ -277,13 +371,18 @@
         placeholder="Например: 20"
       >
 
-      <button class="settings-btn" onclick="saveRequiredPoints()">
+      <button
+        class="settings-btn"
+        onclick="saveRequiredPoints()"
+      >
         💾 Сохранить правило
       </button>
+
     </div>
 
 
     <div class="card">
+
       <h2>➕ Добавить новое задание</h2>
 
       <input
@@ -299,13 +398,18 @@
         min="1"
       >
 
-      <button class="add-btn" onclick="addTask()">
+      <button
+        class="add-btn"
+        onclick="addTask()"
+      >
         ➕ Добавить задание
       </button>
+
     </div>
 
 
     <div class="card">
+
       <h2>🔐 Изменить PIN-код</h2>
 
       <input
@@ -315,35 +419,50 @@
         placeholder="Новый PIN"
       >
 
-      <button class="settings-btn" onclick="changePin()">
+      <button
+        class="settings-btn"
+        onclick="changePin()"
+      >
         🔐 Сохранить PIN
       </button>
+
     </div>
 
 
     <div class="card">
-      <h2>📝 История выполненных заданий</h2>
+
+      <h2>📝 История подтверждённых заданий</h2>
 
       <div id="history"></div>
 
-      <button class="reset-btn" onclick="clearHistory()">
+      <button
+        class="reset-btn"
+        onclick="clearHistory()"
+      >
         🗑️ Очистить историю
       </button>
+
     </div>
 
 
-    <button class="reset-btn" onclick="resetTasks()">
+    <button
+      class="reset-btn"
+      onclick="resetTodayTasks()"
+    >
       🔄 Сбросить задания на сегодня
     </button>
 
-    <button class="exit-btn" onclick="exitParentMode()">
+
+    <button
+      class="exit-btn"
+      onclick="exitParentMode()"
+    >
       🚪 Выйти из режима родителя
     </button>
 
   </div>
 
 
-  <!-- ВХОД РОДИТЕЛЯ -->
   <button
     id="parentLoginBtn"
     class="parent-btn"
@@ -357,43 +476,104 @@
 
 <script>
 
+/* =========================
+   НАСТРОЙКИ И ДАННЫЕ
+========================= */
+
 const defaultTasks = [
-  { name: "🧹 Убрать комнату", points: 10 },
-  { name: "🍽️ Помыть посуду", points: 5 },
-  { name: "🐕 Выгулять собаку", points: 10 },
-  { name: "🧽 Помыть пол", points: 10 },
-  { name: "🗑️ Вынести мусор", points: 5 }
+  { id: "task1", name: "🧹 Убрать комнату", points: 10 },
+  { id: "task2", name: "🍽️ Помыть посуду", points: 5 },
+  { id: "task3", name: "🐕 Выгулять собаку", points: 10 },
+  { id: "task4", name: "🧽 Помыть пол", points: 10 },
+  { id: "task5", name: "🗑️ Вынести мусор", points: 5 }
 ];
+
 
 let tasks =
   JSON.parse(localStorage.getItem("tasks")) ||
   defaultTasks;
 
-let completedTasks =
-  JSON.parse(localStorage.getItem("completedTasks")) ||
-  [];
+
+/* Добавляем ID старым заданиям */
+
+tasks = tasks.map((task, index) => {
+
+  if (!task.id) {
+    task.id =
+      "task_" +
+      Date.now() +
+      "_" +
+      index;
+  }
+
+  return task;
+
+});
+
+
+let taskStates =
+  JSON.parse(localStorage.getItem("taskStates")) ||
+  {};
+
+
+/* Перенос данных из старой версии */
+
+let oldCompleted =
+  JSON.parse(
+    localStorage.getItem("completedTasks")
+  ) || [];
+
+
+if (
+  Object.keys(taskStates).length === 0 &&
+  oldCompleted.length > 0
+) {
+
+  oldCompleted.forEach(index => {
+
+    if (tasks[index]) {
+
+      taskStates[tasks[index].id] =
+        "approved";
+
+    }
+
+  });
+
+}
+
 
 let history =
   JSON.parse(localStorage.getItem("taskHistory")) ||
   [];
 
+
 let requiredPoints =
-  Number(localStorage.getItem("requiredPoints")) ||
-  20;
+  Number(
+    localStorage.getItem("requiredPoints")
+  ) || 20;
+
 
 let parentPin =
   localStorage.getItem("parentPin") ||
   "1234";
 
+
 let parentMode = false;
 
 
+/* =========================
+   ДАТА
+========================= */
+
 function getToday() {
+
   const now = new Date();
 
   return now.getFullYear() + "-" +
     String(now.getMonth() + 1).padStart(2, "0") + "-" +
     String(now.getDate()).padStart(2, "0");
+
 }
 
 
@@ -407,12 +587,7 @@ function checkNewDay() {
 
   if (savedDay && savedDay !== today) {
 
-    completedTasks = [];
-
-    localStorage.setItem(
-      "completedTasks",
-      JSON.stringify(completedTasks)
-    );
+    taskStates = {};
 
   }
 
@@ -422,6 +597,9 @@ function checkNewDay() {
     today
   );
 
+
+  saveData();
+
 }
 
 
@@ -429,16 +607,25 @@ function updateDayInfo() {
 
   const now = new Date();
 
-  document.getElementById("dayInfo").textContent =
+  document
+    .getElementById("dayInfo")
+    .textContent =
     "📅 Сегодня: " +
-    now.toLocaleDateString("ru-RU", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
+    now.toLocaleDateString(
+      "ru-RU",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }
+    );
 
 }
 
+
+/* =========================
+   СОХРАНЕНИЕ
+========================= */
 
 function saveData() {
 
@@ -447,23 +634,42 @@ function saveData() {
     JSON.stringify(tasks)
   );
 
+
   localStorage.setItem(
-    "completedTasks",
-    JSON.stringify(completedTasks)
+    "taskStates",
+    JSON.stringify(taskStates)
   );
+
 
   localStorage.setItem(
     "taskHistory",
     JSON.stringify(history)
   );
 
+
+  localStorage.setItem(
+    "requiredPoints",
+    requiredPoints
+  );
+
+
+  localStorage.setItem(
+    "parentPin",
+    parentPin
+  );
+
 }
 
+
+/* =========================
+   ЗАДАНИЯ
+========================= */
 
 function renderTasks() {
 
   const container =
     document.getElementById("tasks");
+
 
   container.innerHTML = "";
 
@@ -473,6 +679,7 @@ function renderTasks() {
     container.innerHTML =
       '<div class="empty">Пока нет заданий 👀</div>';
 
+
     updatePoints();
 
     return;
@@ -480,37 +687,109 @@ function renderTasks() {
   }
 
 
-  tasks.forEach((task, index) => {
+  tasks.forEach(task => {
 
-    const completed =
-      completedTasks.includes(index);
+    const state =
+      taskStates[task.id] || "available";
 
 
-    const taskElement =
+    const element =
       document.createElement("div");
 
 
-    taskElement.className =
-      "task" + (completed ? " completed" : "");
+    element.className = "task";
 
 
-    let buttons = `
-      <button
-        class="complete-btn"
-        onclick="completeTask(${index})"
-        ${completed ? "disabled" : ""}
-      >
-        ${completed ? "✅ Выполнено" : "Выполнить"}
-      </button>
-    `;
+    if (state === "approved") {
 
+      element.classList.add(
+        "approved-task"
+      );
+
+    }
+
+
+    if (state === "pending") {
+
+      element.classList.add(
+        "pending-task"
+      );
+
+    }
+
+
+    let statusText = "";
+    let buttons = "";
+
+
+    /* ДОСТУПНО */
+
+    if (state === "available") {
+
+      statusText =
+        '<div class="task-status">🟢 Можно выполнить</div>';
+
+
+      buttons = `
+        <button
+          class="complete-btn"
+          onclick="submitTask('${task.id}')"
+        >
+          📤 Выполнил
+        </button>
+      `;
+
+    }
+
+
+    /* НА ПРОВЕРКЕ */
+
+    if (state === "pending") {
+
+      statusText =
+        '<div class="task-status">⏳ На проверке у родителя</div>';
+
+
+      buttons = `
+        <button
+          class="pending-btn"
+          disabled
+        >
+          ⏳ Проверяется
+        </button>
+      `;
+
+    }
+
+
+    /* ПОДТВЕРЖДЕНО */
+
+    if (state === "approved") {
+
+      statusText =
+        '<div class="task-status">✅ Подтверждено родителем</div>';
+
+
+      buttons = `
+        <button
+          class="complete-btn"
+          disabled
+        >
+          ✅ Выполнено
+        </button>
+      `;
+
+    }
+
+
+    /* УДАЛЕНИЕ ТОЛЬКО РОДИТЕЛЕМ */
 
     if (parentMode) {
 
       buttons += `
         <button
           class="delete-btn"
-          onclick="deleteTask(${index})"
+          onclick="deleteTask('${task.id}')"
         >
           🗑️
         </button>
@@ -519,19 +798,31 @@ function renderTasks() {
     }
 
 
-    taskElement.innerHTML = `
+    element.innerHTML = `
+
       <div class="task-info">
-        <div class="task-name">${task.name}</div>
+
+        <div class="task-name">
+          ${task.name}
+        </div>
+
         <div class="task-points">
           +${task.points} баллов ⭐
         </div>
+
+        ${statusText}
+
       </div>
 
-      <div>${buttons}</div>
+
+      <div>
+        ${buttons}
+      </div>
+
     `;
 
 
-    container.appendChild(taskElement);
+    container.appendChild(element);
 
   });
 
@@ -541,33 +832,29 @@ function renderTasks() {
 }
 
 
-function completeTask(index) {
+/* =========================
+   РЕБЁНОК ОТПРАВЛЯЕТ
+========================= */
 
-  if (!completedTasks.includes(index)) {
+function submitTask(taskId) {
 
-    completedTasks.push(index);
+  if (
+    taskStates[taskId] === "available" ||
+    taskStates[taskId] === undefined
+  ) {
 
-
-    const now = new Date();
-
-
-    history.unshift({
-      task: tasks[index].name,
-      points: tasks[index].points,
-      date: now.toLocaleDateString("ru-RU"),
-      time: now.toLocaleTimeString("ru-RU", {
-        hour: "2-digit",
-        minute: "2-digit"
-      })
-    });
+    taskStates[taskId] =
+      "pending";
 
 
     saveData();
 
+
     renderTasks();
 
+
     if (parentMode) {
-      renderHistory();
+      renderPendingTasks();
     }
 
   }
@@ -575,39 +862,71 @@ function completeTask(index) {
 }
 
 
-function renderHistory() {
+/* =========================
+   ПОДТВЕРЖДЕНИЕ РОДИТЕЛЕМ
+========================= */
+
+function renderPendingTasks() {
 
   const container =
-    document.getElementById("history");
+    document.getElementById("pendingTasks");
+
 
   container.innerHTML = "";
 
 
-  if (history.length === 0) {
+  const pending =
+    tasks.filter(
+      task =>
+        taskStates[task.id] === "pending"
+    );
+
+
+  if (pending.length === 0) {
 
     container.innerHTML =
-      '<div class="empty">История пока пуста 📭</div>';
+      '<div class="empty">Нет заданий на проверке 🎉</div>';
+
 
     return;
 
   }
 
 
-  history.forEach(item => {
+  pending.forEach(task => {
 
     const element =
       document.createElement("div");
 
-    element.className = "history-item";
+
+    element.className =
+      "history-item";
+
 
     element.innerHTML = `
-      <strong>${item.task}</strong>
-      <br>
-      ⭐ +${item.points} баллов
+
+      <strong>${task.name}</strong>
+
       <div class="history-date">
-        📅 ${item.date} в ${item.time}
+        ⭐ ${task.points} баллов
       </div>
+
+      <button
+        class="approve-btn"
+        onclick="approveTask('${task.id}')"
+      >
+        ✅ Подтвердить
+      </button>
+
+      <button
+        class="reject-btn"
+        onclick="rejectTask('${task.id}')"
+      >
+        ❌ Отклонить
+      </button>
+
     `;
+
 
     container.appendChild(element);
 
@@ -616,257 +935,97 @@ function renderHistory() {
 }
 
 
-function clearHistory() {
+function approveTask(taskId) {
 
   if (!parentMode) return;
 
 
-  if (confirm("Очистить всю историю?")) {
-
-    history = [];
-
-    saveData();
-
-    renderHistory();
-
-  }
-
-}
-
-
-function enterParentMode() {
-
-  const pin =
-    prompt("Введите PIN-код родителя");
-
-
-  if (pin === parentPin) {
-
-    parentMode = true;
-
-
-    document
-      .getElementById("parentPanel")
-      .classList.remove("hidden");
-
-
-    document
-      .getElementById("parentLoginBtn")
-      .classList.add("hidden");
-
-
-    document
-      .getElementById("modeText")
-      .textContent =
-      "👨‍👩‍👧 Режим родителя";
-
-
-    document
-      .getElementById("requiredPoints")
-      .value = requiredPoints;
-
-
-    renderTasks();
-
-    renderHistory();
-
-
-  } else {
-
-    alert("❌ Неверный PIN-код");
-
-  }
-
-}
-
-
-function exitParentMode() {
-
-  parentMode = false;
-
-
-  document
-    .getElementById("parentPanel")
-    .classList.add("hidden");
-
-
-  document
-    .getElementById("parentLoginBtn")
-    .classList.remove("hidden");
-
-
-  document
-    .getElementById("modeText")
-    .textContent =
-    "🦸 Режим ребёнка";
-
-
-  renderTasks();
-
-}
-
-
-function addTask() {
-
-  const name =
-    document
-      .getElementById("newTaskName")
-      .value
-      .trim();
-
-
-  const points =
-    Number(
-      document
-        .getElementById("newTaskPoints")
-        .value
+  const task =
+    tasks.find(
+      item => item.id === taskId
     );
 
 
-  if (!name) {
-
-    alert("Введите название задания");
-
-    return;
-
-  }
+  if (!task) return;
 
 
-  if (!points || points < 1) {
-
-    alert("Введите количество баллов");
-
-    return;
-
-  }
+  taskStates[taskId] =
+    "approved";
 
 
-  tasks.push({
-    name: name,
-    points: points
+  const now = new Date();
+
+
+  history.unshift({
+
+    task: task.name,
+
+    points: task.points,
+
+    timestamp: now.getTime(),
+
+    date: now.toLocaleDateString("ru-RU"),
+
+    time: now.toLocaleTimeString(
+      "ru-RU",
+      {
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    )
+
   });
 
 
   saveData();
 
 
-  document
-    .getElementById("newTaskName")
-    .value = "";
-
-
-  document
-    .getElementById("newTaskPoints")
-    .value = "";
-
-
   renderTasks();
+
+  renderPendingTasks();
+
+  renderHistory();
+
+  renderWeeklyStats();
 
 }
 
 
-function deleteTask(index) {
+function rejectTask(taskId) {
 
   if (!parentMode) return;
 
 
-  if (confirm("Удалить это задание?")) {
-
-    tasks.splice(index, 1);
-
-    completedTasks = [];
-
-    saveData();
-
-    renderTasks();
-
-  }
-
-}
+  taskStates[taskId] =
+    "available";
 
 
-function saveRequiredPoints() {
-
-  const value =
-    Number(
-      document
-        .getElementById("requiredPoints")
-        .value
-    );
+  saveData();
 
 
-  if (!value || value < 1) {
+  renderTasks();
 
-    alert("Введите правильное количество баллов");
-
-    return;
-
-  }
-
-
-  requiredPoints = value;
-
-
-  localStorage.setItem(
-    "requiredPoints",
-    requiredPoints
-  );
-
-
-  updatePoints();
-
-  alert("Правило сохранено! 🎯");
+  renderPendingTasks();
 
 }
 
 
-function changePin() {
-
-  const newPin =
-    document
-      .getElementById("newPin")
-      .value
-      .trim();
-
-
-  if (newPin.length < 4) {
-
-    alert("PIN должен содержать минимум 4 символа");
-
-    return;
-
-  }
-
-
-  parentPin = newPin;
-
-
-  localStorage.setItem(
-    "parentPin",
-    parentPin
-  );
-
-
-  document
-    .getElementById("newPin")
-    .value = "";
-
-
-  alert("🔐 PIN-код изменён!");
-
-}
-
+/* =========================
+   БАЛЛЫ
+========================= */
 
 function updatePoints() {
 
   let total = 0;
 
 
-  completedTasks.forEach(index => {
+  tasks.forEach(task => {
 
-    if (tasks[index]) {
+    if (
+      taskStates[task.id] === "approved"
+    ) {
 
-      total += tasks[index].points;
+      total += task.points;
 
     }
 
@@ -875,7 +1034,8 @@ function updatePoints() {
 
   document
     .getElementById("points")
-    .textContent = total;
+    .textContent =
+    total;
 
 
   const status =
@@ -909,23 +1069,537 @@ function updatePoints() {
 }
 
 
-function resetTasks() {
+/* =========================
+   РОДИТЕЛЬСКИЙ РЕЖИМ
+========================= */
 
-  if (!parentMode) return;
+function enterParentMode() {
+
+  const pin =
+    prompt(
+      "Введите PIN-код родителя"
+    );
 
 
-  if (confirm("Сбросить задания на сегодня?")) {
+  if (pin === parentPin) {
 
-    completedTasks = [];
+    parentMode = true;
 
-    saveData();
+
+    document
+      .getElementById("parentPanel")
+      .classList.remove("hidden");
+
+
+    document
+      .getElementById("parentLoginBtn")
+      .classList.add("hidden");
+
+
+    document
+      .getElementById("modeText")
+      .textContent =
+      "👨‍👩‍👧 Режим родителя";
+
+
+    document
+      .getElementById("requiredPoints")
+      .value =
+      requiredPoints;
+
 
     renderTasks();
+
+    renderPendingTasks();
+
+    renderHistory();
+
+    renderWeeklyStats();
+
+
+  } else {
+
+    alert(
+      "❌ Неверный PIN-код"
+    );
 
   }
 
 }
 
+
+function exitParentMode() {
+
+  parentMode = false;
+
+
+  document
+    .getElementById("parentPanel")
+    .classList.add("hidden");
+
+
+  document
+    .getElementById("parentLoginBtn")
+    .classList.remove("hidden");
+
+
+  document
+    .getElementById("modeText")
+    .textContent =
+    "🦸 Режим ребёнка";
+
+
+  renderTasks();
+
+}
+
+
+/* =========================
+   ДОБАВЛЕНИЕ ЗАДАНИЯ
+========================= */
+
+function addTask() {
+
+  const name =
+    document
+      .getElementById("newTaskName")
+      .value
+      .trim();
+
+
+  const points =
+    Number(
+      document
+        .getElementById("newTaskPoints")
+        .value
+    );
+
+
+  if (!name) {
+
+    alert(
+      "Введите название задания"
+    );
+
+    return;
+
+  }
+
+
+  if (!points || points < 1) {
+
+    alert(
+      "Введите количество баллов"
+    );
+
+    return;
+
+  }
+
+
+  const newTask = {
+
+    id:
+      "task_" +
+      Date.now(),
+
+    name: name,
+
+    points: points
+
+  };
+
+
+  tasks.push(newTask);
+
+
+  saveData();
+
+
+  document
+    .getElementById("newTaskName")
+    .value = "";
+
+
+  document
+    .getElementById("newTaskPoints")
+    .value = "";
+
+
+  renderTasks();
+
+}
+
+
+/* =========================
+   УДАЛЕНИЕ ЗАДАНИЯ
+========================= */
+
+function deleteTask(taskId) {
+
+  if (!parentMode) return;
+
+
+  if (
+    confirm(
+      "Удалить это задание?"
+    )
+  ) {
+
+    tasks =
+      tasks.filter(
+        task =>
+          task.id !== taskId
+      );
+
+
+    delete taskStates[taskId];
+
+
+    saveData();
+
+
+    renderTasks();
+
+    renderPendingTasks();
+
+  }
+
+}
+
+
+/* =========================
+   ПРАВИЛО ПРОГУЛКИ
+========================= */
+
+function saveRequiredPoints() {
+
+  const value =
+    Number(
+      document
+        .getElementById("requiredPoints")
+        .value
+    );
+
+
+  if (!value || value < 1) {
+
+    alert(
+      "Введите правильное количество баллов"
+    );
+
+    return;
+
+  }
+
+
+  requiredPoints = value;
+
+
+  saveData();
+
+  updatePoints();
+
+
+  alert(
+    "🎯 Правило сохранено!"
+  );
+
+}
+
+
+/* =========================
+   PIN
+========================= */
+
+function changePin() {
+
+  const newPin =
+    document
+      .getElementById("newPin")
+      .value
+      .trim();
+
+
+  if (newPin.length < 4) {
+
+    alert(
+      "PIN должен содержать минимум 4 символа"
+    );
+
+    return;
+
+  }
+
+
+  parentPin =
+    newPin;
+
+
+  saveData();
+
+
+  document
+    .getElementById("newPin")
+    .value = "";
+
+
+  alert(
+    "🔐 PIN-код изменён!"
+  );
+
+}
+
+
+/* =========================
+   ИСТОРИЯ
+========================= */
+
+function renderHistory() {
+
+  const container =
+    document.getElementById("history");
+
+
+  container.innerHTML = "";
+
+
+  if (history.length === 0) {
+
+    container.innerHTML =
+      '<div class="empty">История пока пуста 📭</div>';
+
+
+    return;
+
+  }
+
+
+  history.slice(0, 50).forEach(item => {
+
+    const element =
+      document.createElement("div");
+
+
+    element.className =
+      "history-item";
+
+
+    element.innerHTML = `
+
+      <strong>
+        ${item.task}
+      </strong>
+
+      <br>
+
+      ⭐ +${item.points} баллов
+
+      <div class="history-date">
+        📅 ${item.date} в ${item.time}
+      </div>
+
+    `;
+
+
+    container.appendChild(element);
+
+  });
+
+}
+
+
+function clearHistory() {
+
+  if (!parentMode) return;
+
+
+  if (
+    confirm(
+      "Очистить всю историю?"
+    )
+  ) {
+
+    history = [];
+
+
+    saveData();
+
+
+    renderHistory();
+
+    renderWeeklyStats();
+
+  }
+
+}
+
+
+/* =========================
+   НЕДЕЛЬНАЯ СТАТИСТИКА
+========================= */
+
+function renderWeeklyStats() {
+
+  const container =
+    document.getElementById("weeklyStats");
+
+
+  container.innerHTML = "";
+
+
+  let totalPoints = 0;
+
+  let totalTasks = 0;
+
+
+  const today = new Date();
+
+  today.setHours(
+    0, 0, 0, 0
+  );
+
+
+  for (
+    let i = 6;
+    i >= 0;
+    i--
+  ) {
+
+    const day =
+      new Date(today);
+
+
+    day.setDate(
+      today.getDate() - i
+    );
+
+
+    const start =
+      day.getTime();
+
+
+    const end =
+      start +
+      24 * 60 * 60 * 1000;
+
+
+    const dayItems =
+      history.filter(item => {
+
+        if (!item.timestamp) {
+
+          return false;
+
+        }
+
+
+        return (
+          item.timestamp >= start &&
+          item.timestamp < end
+        );
+
+      });
+
+
+    const dayPoints =
+      dayItems.reduce(
+        (sum, item) =>
+          sum + item.points,
+        0
+      );
+
+
+    totalPoints +=
+      dayPoints;
+
+
+    totalTasks +=
+      dayItems.length;
+
+
+    const element =
+      document.createElement("div");
+
+
+    element.className =
+      "stat-day";
+
+
+    element.innerHTML = `
+
+      <div class="stat-date">
+        ${day.toLocaleDateString(
+          "ru-RU",
+          {
+            weekday: "short"
+          }
+        )}
+      </div>
+
+      <div class="stat-date">
+        ${day.getDate()}
+      </div>
+
+      <div class="stat-points">
+        ${dayPoints}⭐
+      </div>
+
+    `;
+
+
+    container.appendChild(element);
+
+  }
+
+
+  document
+    .getElementById("weekPoints")
+    .textContent =
+    totalPoints;
+
+
+  document
+    .getElementById("weekTasks")
+    .textContent =
+    totalTasks;
+
+}
+
+
+/* =========================
+   СБРОС ДНЯ
+========================= */
+
+function resetTodayTasks() {
+
+  if (!parentMode) return;
+
+
+  if (
+    confirm(
+      "Сбросить все задания на сегодня?"
+    )
+  ) {
+
+    taskStates = {};
+
+
+    saveData();
+
+
+    renderTasks();
+
+    renderPendingTasks();
+
+  }
+
+}
+
+
+/* =========================
+   ЗАПУСК
+========================= */
 
 checkNewDay();
 
