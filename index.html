@@ -203,6 +203,28 @@
       font-weight: bold;
       color: #555;
     }
+
+    .history-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-date {
+      color: #666;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .day-info {
+      text-align: center;
+      color: #666;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -219,8 +241,10 @@
     🦸 Режим ребёнка
   </div>
 
+  <div id="dayInfo" class="day-info"></div>
+
   <div class="card points-card">
-    <div>Твои баллы</div>
+    <div>Твои баллы сегодня</div>
 
     <div class="points">
       <span id="points">0</span> ⭐
@@ -231,13 +255,12 @@
     </div>
   </div>
 
-  <h2>📋 Задания</h2>
+  <h2>📋 Задания на сегодня</h2>
 
   <div id="tasks"></div>
 
 
   <!-- РОДИТЕЛЬСКАЯ ПАНЕЛЬ -->
-
   <div id="parentPanel" class="hidden">
 
     <div class="card">
@@ -254,10 +277,7 @@
         placeholder="Например: 20"
       >
 
-      <button
-        class="settings-btn"
-        onclick="saveRequiredPoints()"
-      >
+      <button class="settings-btn" onclick="saveRequiredPoints()">
         💾 Сохранить правило
       </button>
     </div>
@@ -279,10 +299,7 @@
         min="1"
       >
 
-      <button
-        class="add-btn"
-        onclick="addTask()"
-      >
+      <button class="add-btn" onclick="addTask()">
         ➕ Добавить задание
       </button>
     </div>
@@ -294,39 +311,39 @@
       <input
         type="password"
         id="newPin"
-        maxlength="10"
+        maxlength="20"
         placeholder="Новый PIN"
       >
 
-      <button
-        class="settings-btn"
-        onclick="changePin()"
-      >
+      <button class="settings-btn" onclick="changePin()">
         🔐 Сохранить PIN
       </button>
     </div>
 
 
-    <button
-      class="reset-btn"
-      onclick="resetTasks()"
-    >
-      🔄 Сбросить все задания
+    <div class="card">
+      <h2>📝 История выполненных заданий</h2>
+
+      <div id="history"></div>
+
+      <button class="reset-btn" onclick="clearHistory()">
+        🗑️ Очистить историю
+      </button>
+    </div>
+
+
+    <button class="reset-btn" onclick="resetTasks()">
+      🔄 Сбросить задания на сегодня
     </button>
 
-
-    <button
-      class="exit-btn"
-      onclick="exitParentMode()"
-    >
+    <button class="exit-btn" onclick="exitParentMode()">
       🚪 Выйти из режима родителя
     </button>
 
   </div>
 
 
-  <!-- КНОПКА ВХОДА -->
-
+  <!-- ВХОД РОДИТЕЛЯ -->
   <button
     id="parentLoginBtn"
     class="parent-btn"
@@ -356,6 +373,10 @@ let completedTasks =
   JSON.parse(localStorage.getItem("completedTasks")) ||
   [];
 
+let history =
+  JSON.parse(localStorage.getItem("taskHistory")) ||
+  [];
+
 let requiredPoints =
   Number(localStorage.getItem("requiredPoints")) ||
   20;
@@ -367,8 +388,56 @@ let parentPin =
 let parentMode = false;
 
 
-document.getElementById("requiredPoints").value =
-  requiredPoints;
+function getToday() {
+  const now = new Date();
+
+  return now.getFullYear() + "-" +
+    String(now.getMonth() + 1).padStart(2, "0") + "-" +
+    String(now.getDate()).padStart(2, "0");
+}
+
+
+function checkNewDay() {
+
+  const today = getToday();
+
+  const savedDay =
+    localStorage.getItem("lastActiveDay");
+
+
+  if (savedDay && savedDay !== today) {
+
+    completedTasks = [];
+
+    localStorage.setItem(
+      "completedTasks",
+      JSON.stringify(completedTasks)
+    );
+
+  }
+
+
+  localStorage.setItem(
+    "lastActiveDay",
+    today
+  );
+
+}
+
+
+function updateDayInfo() {
+
+  const now = new Date();
+
+  document.getElementById("dayInfo").textContent =
+    "📅 Сегодня: " +
+    now.toLocaleDateString("ru-RU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+
+}
 
 
 function saveData() {
@@ -381,6 +450,11 @@ function saveData() {
   localStorage.setItem(
     "completedTasks",
     JSON.stringify(completedTasks)
+  );
+
+  localStorage.setItem(
+    "taskHistory",
+    JSON.stringify(history)
   );
 
 }
@@ -421,7 +495,6 @@ function renderTasks() {
 
 
     let buttons = `
-
       <button
         class="complete-btn"
         onclick="completeTask(${index})"
@@ -429,44 +502,32 @@ function renderTasks() {
       >
         ${completed ? "✅ Выполнено" : "Выполнить"}
       </button>
-
     `;
 
 
     if (parentMode) {
 
       buttons += `
-
         <button
           class="delete-btn"
           onclick="deleteTask(${index})"
         >
           🗑️
         </button>
-
       `;
 
     }
 
 
     taskElement.innerHTML = `
-
       <div class="task-info">
-
-        <div class="task-name">
-          ${task.name}
-        </div>
-
+        <div class="task-name">${task.name}</div>
         <div class="task-points">
           +${task.points} баллов ⭐
         </div>
-
       </div>
 
-      <div>
-        ${buttons}
-      </div>
-
+      <div>${buttons}</div>
     `;
 
 
@@ -486,9 +547,87 @@ function completeTask(index) {
 
     completedTasks.push(index);
 
+
+    const now = new Date();
+
+
+    history.unshift({
+      task: tasks[index].name,
+      points: tasks[index].points,
+      date: now.toLocaleDateString("ru-RU"),
+      time: now.toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    });
+
+
     saveData();
 
     renderTasks();
+
+    if (parentMode) {
+      renderHistory();
+    }
+
+  }
+
+}
+
+
+function renderHistory() {
+
+  const container =
+    document.getElementById("history");
+
+  container.innerHTML = "";
+
+
+  if (history.length === 0) {
+
+    container.innerHTML =
+      '<div class="empty">История пока пуста 📭</div>';
+
+    return;
+
+  }
+
+
+  history.forEach(item => {
+
+    const element =
+      document.createElement("div");
+
+    element.className = "history-item";
+
+    element.innerHTML = `
+      <strong>${item.task}</strong>
+      <br>
+      ⭐ +${item.points} баллов
+      <div class="history-date">
+        📅 ${item.date} в ${item.time}
+      </div>
+    `;
+
+    container.appendChild(element);
+
+  });
+
+}
+
+
+function clearHistory() {
+
+  if (!parentMode) return;
+
+
+  if (confirm("Очистить всю историю?")) {
+
+    history = [];
+
+    saveData();
+
+    renderHistory();
 
   }
 
@@ -522,7 +661,14 @@ function enterParentMode() {
       "👨‍👩‍👧 Режим родителя";
 
 
+    document
+      .getElementById("requiredPoints")
+      .value = requiredPoints;
+
+
     renderTasks();
+
+    renderHistory();
 
 
   } else {
@@ -628,12 +774,9 @@ function deleteTask(index) {
 
     tasks.splice(index, 1);
 
-
     completedTasks = [];
 
-
     saveData();
-
 
     renderTasks();
 
@@ -671,7 +814,6 @@ function saveRequiredPoints() {
 
 
   updatePoints();
-
 
   alert("Правило сохранено! 🎯");
 
@@ -772,13 +914,11 @@ function resetTasks() {
   if (!parentMode) return;
 
 
-  if (confirm("Сбросить все задания?")) {
+  if (confirm("Сбросить задания на сегодня?")) {
 
     completedTasks = [];
 
-
     saveData();
-
 
     renderTasks();
 
@@ -786,6 +926,10 @@ function resetTasks() {
 
 }
 
+
+checkNewDay();
+
+updateDayInfo();
 
 renderTasks();
 
