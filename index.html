@@ -1,1 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>Домашние задания ⭐</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f5f9;
+      color: #222;
+    }
+
+    header {
+      text-align: center;
+      padding: 25px 15px;
+      background: #4f46e5;
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 15px;
+    }
+
+    .points-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    .points {
+      font-size: 50px;
+      font-weight: bold;
+      color: #4f46e5;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+
+    .allowed {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .not-allowed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    h2 {
+      margin-top: 25px;
+    }
+
+    .task {
+      background: white;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+    }
+
+    .task-info {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .task-name {
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .task-points {
+      color: #666;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .complete-btn {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .complete-btn:disabled {
+      background: #aaa;
+    }
+
+    .reset-btn {
+      width: 100%;
+      background: #ef4444;
+      color: white;
+      margin-top: 20px;
+      padding: 14px;
+    }
+
+    .completed {
+      opacity: 0.55;
+      text-decoration: line-through;
+    }
+
+    .info {
+      background: #fff7ed;
+      padding: 15px;
+      border-radius: 15px;
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🏠 Мои домашние задания</h1>
+  <p>Выполняй задания и зарабатывай баллы ⭐</p>
+</header>
+
+<div class="container">
+
+  <div class="points-card">
+    <div>Твои баллы</div>
+
+    <div class="points">
+      <span id="points">0</span> ⭐
+    </div>
+
+    <div id="status" class="status not-allowed">
+      ⛔ Пока нельзя идти гулять
+    </div>
+  </div>
+
+  <h2>📋 Задания</h2>
+
+  <div id="tasks"></div>
+
+  <div class="info">
+    💡 Набери <b>20 баллов</b>, чтобы получить разрешение пойти гулять!
+  </div>
+
+  <button class="reset-btn" onclick="resetTasks()">
+    🔄 Начать заново
+  </button>
+
+</div>
+
+<script>
+
+const tasks = [
+  {
+    name: "🧹 Убрать комнату",
+    points: 10
+  },
+  {
+    name: "🍽️ Помыть посуду",
+    points: 5
+  },
+  {
+    name: "🐕 Выгулять собаку",
+    points: 10
+  },
+  {
+    name: "🧽 Помыть пол",
+    points: 10
+  },
+  {
+    name: "🗑️ Вынести мусор",
+    points: 5
+  }
+];
+
+let completedTasks = JSON.parse(
+  localStorage.getItem("completedTasks")
+) || [];
+
+function renderTasks() {
+
+  const tasksContainer = document.getElementById("tasks");
+
+  tasksContainer.innerHTML = "";
+
+  tasks.forEach((task, index) => {
+
+    const completed = completedTasks.includes(index);
+
+    const taskElement = document.createElement("div");
+
+    taskElement.className =
+      "task" + (completed ? " completed" : "");
+
+    taskElement.innerHTML = `
+      <div class="task-info">
+        <div class="task-name">${task.name}</div>
+        <div class="task-points">+${task.points} баллов ⭐</div>
+      </div>
+
+      <button
+        class="complete-btn"
+        onclick="completeTask(${index})"
+        ${completed ? "disabled" : ""}
+      >
+        ${completed ? "✅ Выполнено" : "Выполнить"}
+      </button>
+    `;
+
+    tasksContainer.appendChild(taskElement);
+
+  });
+
+  updatePoints();
+
+}
+
+function completeTask(index) {
+
+  if (!completedTasks.includes(index)) {
+
+    completedTasks.push(index);
+
+    localStorage.setItem(
+      "completedTasks",
+      JSON.stringify(completedTasks)
+    );
+
+    renderTasks();
+
+  }
+
+}
+
+function updatePoints() {
+
+  let totalPoints = 0;
+
+  completedTasks.forEach(index => {
+    totalPoints += tasks[index].points;
+  });
+
+  document.getElementById("points").textContent =
+    totalPoints;
+
+  const status = document.getElementById("status");
+
+  if (totalPoints >= 20) {
+
+    status.className = "status allowed";
+
+    status.innerHTML =
+      "🎉 Можно идти гулять! Молодец!";
+
+  } else {
+
+    status.className = "status not-allowed";
+
+    status.innerHTML =
+      "⛔ Пока нельзя идти гулять";
+
+  }
+
+}
+
+function resetTasks() {
+
+  if (confirm("Начать все задания заново?")) {
+
+    completedTasks = [];
+
+    localStorage.removeItem("completedTasks");
+
+    renderTasks();
+
+  }
+
+}
+
+renderTasks();
+
+</script>
+
+</body>
+</html>
